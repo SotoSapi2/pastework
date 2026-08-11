@@ -12,7 +12,7 @@ neoforge = "21.11.37-beta"
 pastework_gradle = "1.0.0"
 
 # Plugins versions
-loom="1.14-SNAPSHOT"
+loom="1.17-SNAPSHOT"
 moddev="2.0.141"
 
 [libraries]

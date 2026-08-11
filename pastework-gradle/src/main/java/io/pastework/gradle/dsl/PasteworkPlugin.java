@@ -2,6 +2,7 @@ package io.pastework.gradle.dsl;
 
 import io.pastework.gradle.internal.initializer.*;
 import net.fabricmc.loom.LoomGradlePlugin;
+import net.fabricmc.loom.LoomRemapGradlePlugin;
 import net.neoforged.moddevgradle.boot.ModDevPlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -44,7 +45,7 @@ public class PasteworkPlugin implements Plugin<Project>
             {
                 case FABRIC ->
                 {
-                    plugins.apply(LoomGradlePlugin.class);
+                    plugins.apply(LoomRemapGradlePlugin.class);
                     createPasteworkExtension(target, PlatformType.FABRIC);
                 }
                 case NEOFORGE ->
