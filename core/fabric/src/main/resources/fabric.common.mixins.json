@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "io.pastework.core.fabric.common.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "world.FabricLivingEntityMixin",
+    "world.FabricPlayerMixin",
+    "world.FabricServerPlayerGameModeMixin",
+    "world.extension.FabricBlockEntityAttachableExtension",
+    "world.extension.FabricChunkAttachableExtension",
+    "world.extension.FabricEntityAttachableExtension",
+    "world.extension.FabricLevelAttachableExtension"
+  ]
+}

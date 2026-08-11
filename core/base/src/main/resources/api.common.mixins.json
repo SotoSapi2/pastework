@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "io.pastework.core.api.common.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "accessors.PasteworkEntityTrackerAccessor",
+    "accessors.PasteworkMapAccessor"
+  ]
+}

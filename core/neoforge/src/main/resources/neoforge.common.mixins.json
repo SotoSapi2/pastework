@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "io.pastework.core.neoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "world.extension.NeoBlockEntityAttachableExtension",
+    "world.extension.NeoChunkAttachableExtension",
+    "world.extension.NeoEntityAttachableExtension",
+    "world.extension.NeoLevelAttachableExtension"
+  ]
+}

@@ -1,0 +1,32 @@
+[versions]
+# Libraries versions
+lombok = "1.18.42"
+mixin = "0.8.7"
+mixin_extra = "0.5.2"
+asm = "9.5"
+minecraft = "1.21.11"
+parchment = "2025.12.20"
+fabric_loader = "0.18.1"
+fabric_api = "0.141.1+1.21.11"
+neoforge = "21.11.37-beta"
+pastework_gradle = "1.0.0"
+
+# Plugins versions
+loom="1.14-SNAPSHOT"
+moddev="2.0.141"
+
+[libraries]
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
+mixin_extra = { module = "io.github.llamalad7:mixinextras-common", version.ref = "mixin_extra" }
+asm_commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
+minecraft = { module = "net.minecraft:minecraft", version.ref = "minecraft"}
+neoforge = { module = "net.neoforged:neoforge", version.ref = "neoforge"}
+fabric_loader= { module = "net.fabricmc:fabric-loader", version.ref = "fabric_loader"}
+fabric_api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric_api"}
+loom = { module = "net.fabricmc:fabric-loom", version.ref = "loom"}
+moddev = { module = "net.neoforged:moddev-gradle", version.ref = "moddev"}
+pastework_gradle = { module = "io.github.sotoSapi2:pastework-gradle", version.ref = "pastework_gradle"}
+
+[plugins]
+pastework_gradle = { id = "pastework.gradle", version.ref = "pastework_gradle"}

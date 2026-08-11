@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "io.pastework.core.base.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "input.ClientKeyboardHandlerMixin",
+    "input.ClientMouseHandlerMixin",
+    "network.ChatComponentMixin"
+  ]
+}

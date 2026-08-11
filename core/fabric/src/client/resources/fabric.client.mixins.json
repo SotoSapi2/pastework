@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "io.pastework.core.fabric.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "render.FabricGameRendererMixin",
+    "render.FabricLevelRenderMixin",
+    "world.FabricMultiPlayerGameModeMixin"
+  ]
+}
