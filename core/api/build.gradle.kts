@@ -10,5 +10,6 @@ pastework {
 }
 
 dependencies {
+    "bundle"(project(":spi"))
     "api"(project(":spi"))
 }
