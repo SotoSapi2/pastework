@@ -95,19 +95,26 @@ public final class FabricConfigurationNetworkChannel extends AbstractNetworkChan
     {
         throwIfPacketOppositeFlow(packetInfo);
 
-        switch (packetInfo.getPacketFlow())
+        // DO NOT use switch case!
+        // it's cursed in production build and the runtime will ignore every case given.
+        if(packetInfo.getPacketFlow() == PacketFlow.SERVERBOUND)
         {
-            case SERVERBOUND ->
-                PayloadTypeRegistry.configurationC2S()
-                    .register(packetInfo.getType(), packetInfo.getCodec());
+            PayloadTypeRegistry.configurationC2S()
+                .register(packetInfo.getType(), packetInfo.getCodec());
 
-            case CLIENTBOUND ->
-                PayloadTypeRegistry.configurationS2C()
-                    .register(packetInfo.getType(), packetInfo.getCodec());
-
-            case null, default -> throw new UnsupportedOperationException(
-                "No implementation for network bound type: " + packetInfo.getPacketFlow()
-            );
+            return;
         }
+
+        if(packetInfo.getPacketFlow() == PacketFlow.CLIENTBOUND)
+        {
+            PayloadTypeRegistry.configurationS2C()
+                .register(packetInfo.getType(), packetInfo.getCodec());
+
+            return;
+        }
+
+        throw new UnsupportedOperationException(
+            "No implementation for network bound type: " + packetInfo.getPacketFlow()
+        );
     }
 }

@@ -49,23 +49,26 @@ public final class FabricPlayNetworkChannel extends AbstractNetworkChannel<Regis
     {
         throwIfPacketOppositeFlow(packetInfo);
 
-        switch (packetInfo.getPacketFlow())
+        // DO NOT use switch case!
+        // it's cursed in production build and the runtime will ignore every case given.
+        if(packetInfo.getPacketFlow() == PacketFlow.SERVERBOUND)
         {
-            case SERVERBOUND ->
-            {
-                PayloadTypeRegistry.playC2S()
-                    .register(packetInfo.getType(), packetInfo.getCodec());
-            }
+            PayloadTypeRegistry.playC2S()
+                .register(packetInfo.getType(), packetInfo.getCodec());
 
-            case CLIENTBOUND ->
-            {
-                PayloadTypeRegistry.playS2C()
-                    .register(packetInfo.getType(), packetInfo.getCodec());
-            }
-
-            case null, default -> throw new UnsupportedOperationException(
-                "No implementation for network bound type: " + packetInfo.getPacketFlow()
-            );
+            return;
         }
+
+        if(packetInfo.getPacketFlow() == PacketFlow.CLIENTBOUND)
+        {
+            PayloadTypeRegistry.playS2C()
+                .register(packetInfo.getType(), packetInfo.getCodec());
+
+            return;
+        }
+
+        throw new UnsupportedOperationException(
+            "No implementation for network bound type: " + packetInfo.getPacketFlow()
+        );
     }
 }
