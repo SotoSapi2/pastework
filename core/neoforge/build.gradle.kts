@@ -15,6 +15,6 @@ pastework {
 }
 
 dependencies {
-    "bundle"(project(":core:api"))
+    "bundle"(project(":core:base"))
     "api"(project(":core:base"))
 }
