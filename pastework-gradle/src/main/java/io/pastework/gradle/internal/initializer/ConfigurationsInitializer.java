@@ -262,6 +262,7 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             ProductionPlatformVariant.PRODUCTION_PLATFORM_VARIANT_ATTRIBUTE,
             getObjectFactory().named(ProductionPlatformVariant.class, ProductionPlatformVariant.FABRIC)
         );
+        setupPublishVariant(fabricElements);
 
         var neoforgeElements = register(
             PasteworkConstants.Configuration.NEOFORGE_PRODUCTION_ELEMENTS,
@@ -274,6 +275,7 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             ProductionPlatformVariant.PRODUCTION_PLATFORM_VARIANT_ATTRIBUTE,
             getObjectFactory().named(ProductionPlatformVariant.class, ProductionPlatformVariant.NEOFORGE)
         );
+        setupPublishVariant(neoforgeElements);
     }
 
     private void registersEnvironmentJarTask(
