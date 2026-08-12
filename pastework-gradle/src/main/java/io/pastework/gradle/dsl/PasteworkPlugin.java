@@ -4,6 +4,7 @@ import io.pastework.gradle.internal.initializer.*;
 import net.fabricmc.loom.LoomGradlePlugin;
 import net.fabricmc.loom.LoomRemapGradlePlugin;
 import net.neoforged.moddevgradle.boot.ModDevPlugin;
+import net.neoforged.moddevgradle.internal.jarjar.JarJarPlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;

@@ -21,7 +21,33 @@ public class PasteworkConstants
         public static final String BUNDLE = "bundle";
         public static final String COMMON_API_ELEMENTS = "commonApiElements";
         public static final String CLIENT_API_ELEMENTS = "clientApiElements";
+
+        /**
+         * Legacy configuration. Used to provide mod dependency runtime in development environment.
+         * <p>
+         * This configuration exist as obfuscation work around and
+         * only created if the current project depends on Fabric platform.
+         * From 26.1 MC version and onwards, this configuration won't be created.
+         */
         public static final String NAMED_RUNTIME_ELEMENTS = "namedRuntimeElements";
+
+        /**
+         * Legacy configuration. Used to provide mod dependency runtime in development environment.
+         * <p>
+         * This configuration exist as obfuscation work around and
+         * only created if the current project depends on Fabric platform.
+         * From 26.1 MC version and onwards, this configuration won't be created.
+         */
+        public static final String FABRIC_PRODUCTION_ELEMENTS = "fabricProductionElements";
+
+        /**
+         * Legacy configuration. Used to provide mod dependency runtime in development environment.
+         * <p>
+         * This configuration exist as obfuscation work around and
+         * only created if the current project depends on Fabric platform.
+         * From 26.1 MC version and onwards, this configuration won't be created.
+         */
+        public static final String NEOFORGE_PRODUCTION_ELEMENTS = "neoforgeProductionElements";
     }
 
     @UtilityClass
@@ -30,7 +56,7 @@ public class PasteworkConstants
         public static final String GENERATE_METADATA = "generateMetadata";
         public static final String COMMON_ENV_JAR = "commonEnvJar";
         public static final String CLIENT_ENV_JAR = "clientEnvJar";
-        public static final String NAMED_INCLUDE_JAR_TASK = "namedIncludeJar";
+        public static final String NEOFORGE_PRODUCTION_JAR = "neoForgeProductionJar";
     }
 
     @UtilityClass

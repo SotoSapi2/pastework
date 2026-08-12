@@ -4,9 +4,11 @@ import io.pastework.gradle.dsl.PasteworkConstants;
 import io.pastework.gradle.dsl.PasteworkExtension;
 import io.pastework.gradle.dsl.attribute.EnvironmentVariant;
 import io.pastework.gradle.dsl.attribute.NamedRuntimeVariant;
+import io.pastework.gradle.dsl.attribute.ProductionPlatformVariant;
 import net.fabricmc.loom.configuration.providers.minecraft.MinecraftSourceSets;
+import net.fabricmc.loom.task.RemapTaskConfiguration;
 import net.fabricmc.loom.util.Constants;
-import org.gradle.api.NamedDomainObjectProvider;
+import net.neoforged.moddevgradle.tasks.JarJar;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
@@ -17,6 +19,7 @@ import org.gradle.api.component.ConfigurationVariantDetails;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -49,11 +52,13 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
         SourceSetContainer sourceSets = getSourceSets();
         PasteworkExtension pasteworkExt = getPasteworkExtension();
 
+        var devArtifactsDirectory = getDevArtifactsDirectory();
         var mainSource = sourceSets.named(SourceSet.MAIN_SOURCE_SET_NAME).get();
         registersEnvironmentJarTask(
             PasteworkConstants.Task.COMMON_ENV_JAR,
             mainSource,
-            EnvironmentVariant.COMMON
+            EnvironmentVariant.COMMON,
+            devArtifactsDirectory
         );
 
         if (pasteworkExt.isFabric())
@@ -62,13 +67,46 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             registersMergedJarTask(
                 PasteworkConstants.Task.CLIENT_ENV_JAR,
                 EnvironmentVariant.CLIENT,
-                List.of(mainSource, clientSource)
+                List.of(mainSource, clientSource),
+                devArtifactsDirectory
             );
+
+            setupNeoForgeProductionJarTasks();
+            setupProductionConfiguration();
         }
 
-        setupBundleConfiguration();
         setupEnvironmentVariants();
-        setupRuntimeConfiguration();
+        setupDevelopmentRuntimeConfiguration();
+        setupBundleConfiguration();
+    }
+
+    private void setupNeoForgeProductionJarTasks()
+    {
+        SourceSetContainer sourceSets = getSourceSets();
+        var mainSource = sourceSets.named(SourceSet.MAIN_SOURCE_SET_NAME).get();
+        var clientSource = sourceSets.named(MinecraftSourceSets.Split.CLIENT_ONLY_SOURCE_SET_NAME).get();
+
+        var jarJarTask = JarJar.registerWithConfiguration(
+            getProject(),
+            MODDEV_MAIN_JAR_JAR_CONFIG
+        ).get();
+
+        var standardOutputDirectory = getStandardArtifactsDirectory();
+        var productionJar = registersMergedJarTask(
+            PasteworkConstants.Task.NEOFORGE_PRODUCTION_JAR,
+            "neoforge",
+            List.of(mainSource, clientSource),
+            standardOutputDirectory
+        );
+
+        productionJar.setGroup("build");
+        productionJar.dependsOn(jarJarTask);
+        productionJar.from(jarJarTask);
+
+        getTasks().named(BasePlugin.ASSEMBLE_TASK_NAME, task ->
+        {
+           task.dependsOn(productionJar);
+        });
     }
 
     private void setupBundleConfiguration()
@@ -83,19 +121,26 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             {
                 var attributes = config.getAttributes();
                 attributes.attribute(
-                    NamedRuntimeVariant.NAMED_RUNTIME_VARIANT_ATTRIBUTE,
-                    false
+                    ProductionPlatformVariant.PRODUCTION_PLATFORM_VARIANT_ATTRIBUTE,
+                    getObjectFactory().named(ProductionPlatformVariant.class, ProductionPlatformVariant.FABRIC)
                 );
             });
+
         }
 
-        if (pasteworkExt.isNeoForge())
+        assert getConfigs().findByName(MODDEV_MAIN_JAR_JAR_CONFIG) != null :
+            String.format("%s is not present. This is a bug!", MODDEV_MAIN_JAR_JAR_CONFIG);
+
+        getConfigs().named(MODDEV_MAIN_JAR_JAR_CONFIG).configure(config ->
         {
-            assert getConfigs().findByName(MODDEV_MAIN_JAR_JAR_CONFIG) != null :
-                String.format("%s is not present. This is a bug!", MODDEV_MAIN_JAR_JAR_CONFIG);
+            var attributes = config.getAttributes();
+            attributes.attribute(
+                ProductionPlatformVariant.PRODUCTION_PLATFORM_VARIANT_ATTRIBUTE,
+                getObjectFactory().named(ProductionPlatformVariant.class, ProductionPlatformVariant.NEOFORGE)
+            );
+        });
 
-            extendsFrom(MODDEV_MAIN_JAR_JAR_CONFIG, PasteworkConstants.Configuration.BUNDLE);
-        }
+        extendsFrom(MODDEV_MAIN_JAR_JAR_CONFIG, PasteworkConstants.Configuration.BUNDLE);
     }
 
     private void setupEnvironmentVariants()
@@ -111,7 +156,7 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             tagSourceSetEnvironment(mainSource, EnvironmentVariant.COMMON);
             tagSourceSetEnvironment(clientSource, EnvironmentVariant.CLIENT);
 
-            var commonElements = register(PasteworkConstants.Configuration.COMMON_API_ELEMENTS, Role.CONSUMABLE).get();
+            var commonElements = register(PasteworkConstants.Configuration.COMMON_API_ELEMENTS, Role.CONSUMABLE);
             setupPublishVariant(commonElements);
             setupConfigUsageAttributes(commonElements, Usage.JAVA_API);
             commonElements.getAttributes().attribute(
@@ -124,7 +169,7 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             var commonJarTask = getTasks().named(PasteworkConstants.Task.COMMON_ENV_JAR).get();
             commonElements.getOutgoing().artifact(commonJarTask);
 
-            var clientElements = register(PasteworkConstants.Configuration.CLIENT_API_ELEMENTS, Role.CONSUMABLE).get();
+            var clientElements = register(PasteworkConstants.Configuration.CLIENT_API_ELEMENTS, Role.CONSUMABLE);
             setupPublishVariant(clientElements);
             setupConfigUsageAttributes(clientElements, Usage.JAVA_API);
             clientElements.getAttributes().attribute(
@@ -145,7 +190,7 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
         {
             tagSourceSetEnvironment(mainSource, EnvironmentVariant.CLIENT);
 
-            var clientElements = register(PasteworkConstants.Configuration.CLIENT_API_ELEMENTS, Role.CONSUMABLE).get();
+            var clientElements = register(PasteworkConstants.Configuration.CLIENT_API_ELEMENTS, Role.CONSUMABLE);
             setupConfigUsageAttributes(clientElements, Usage.JAVA_API);
             clientElements.getAttributes().attribute(
                 EnvironmentVariant.ENVIRONMENT_VARIANT_ATTRIBUTE,
@@ -165,7 +210,7 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
     //
     // For ModDev to ModDev dependency, consumers can use runtimeElements because NeoForge
     // runtime is not obfuscated.
-    private void setupRuntimeConfiguration()
+    private void setupDevelopmentRuntimeConfiguration()
     {
         PasteworkExtension pasteworkExt = getPasteworkExtension();
 
@@ -180,7 +225,7 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             var namedRuntimeElements = register(
                 PasteworkConstants.Configuration.NAMED_RUNTIME_ELEMENTS,
                 Role.CONSUMABLE
-            ).get();
+            );
 
             setupConfigUsageAttributes(namedRuntimeElements, Usage.JAVA_RUNTIME);
             namedRuntimeElements.getAttributes().attribute(
@@ -201,25 +246,63 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
         }
     }
 
-    private void registersEnvironmentJarTask(String taskName, SourceSet sourceSet, String classifier)
+    private void setupProductionConfiguration()
     {
-        getTasks().register(
-            taskName, Jar.class, task ->
-            {
-                task.getDestinationDirectory().convention(getDevArtifactsDirectory());
-                task.getArchiveClassifier().set(classifier);
-                task.from(sourceSet.getOutput());
-                task.setDuplicatesStrategy(DuplicatesStrategy.INCLUDE);
-            }
-        ).get();
+        var neoforgeArtifact = getTasks().named(PasteworkConstants.Task.NEOFORGE_PRODUCTION_JAR);
+        var fabricArtifact = getTasks().named(RemapTaskConfiguration.REMAP_JAR_TASK_NAME);
+
+        var fabricElements = register(
+            PasteworkConstants.Configuration.FABRIC_PRODUCTION_ELEMENTS,
+            Role.CONSUMABLE
+        );
+
+        setupConfigUsageAttributes(fabricElements, Usage.JAVA_RUNTIME);
+        fabricElements.getOutgoing().artifact(fabricArtifact);
+        fabricElements.getAttributes().attribute(
+            ProductionPlatformVariant.PRODUCTION_PLATFORM_VARIANT_ATTRIBUTE,
+            getObjectFactory().named(ProductionPlatformVariant.class, ProductionPlatformVariant.FABRIC)
+        );
+
+        var neoforgeElements = register(
+            PasteworkConstants.Configuration.NEOFORGE_PRODUCTION_ELEMENTS,
+            Role.CONSUMABLE
+        );
+
+        setupConfigUsageAttributes(neoforgeElements, Usage.JAVA_RUNTIME);
+        neoforgeElements.getOutgoing().artifact(neoforgeArtifact);
+        neoforgeElements.getAttributes().attribute(
+            ProductionPlatformVariant.PRODUCTION_PLATFORM_VARIANT_ATTRIBUTE,
+            getObjectFactory().named(ProductionPlatformVariant.class, ProductionPlatformVariant.NEOFORGE)
+        );
     }
 
-    private void registersMergedJarTask(String taskName, String classifier, Collection<SourceSet> sourceSets)
+    private void registersEnvironmentJarTask(
+        String taskName,
+        SourceSet sourceSet,
+        String classifier,
+        Directory outputDirectory
+    )
     {
-        getTasks().register(
+        getTasks().register(taskName, Jar.class, task ->
+        {
+            task.getDestinationDirectory().convention(outputDirectory);
+            task.getArchiveClassifier().set(classifier);
+            task.from(sourceSet.getOutput());
+            task.setDuplicatesStrategy(DuplicatesStrategy.INCLUDE);
+        }).get();
+    }
+
+    private Jar registersMergedJarTask(
+        String taskName,
+        String classifier,
+        Collection<SourceSet> sourceSets,
+        Directory outputDirectory
+    )
+    {
+        return getTasks().register(
             taskName, Jar.class, task ->
             {
-                task.getDestinationDirectory().convention(getDevArtifactsDirectory());
+                task.getDestinationDirectory().convention(outputDirectory);
                 task.getArchiveClassifier().set(classifier);
 
                 for (var sourceSet : sourceSets)
@@ -228,6 +311,15 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
                 }
             }
         ).get();
+    }
+
+    private Directory getStandardArtifactsDirectory()
+    {
+        return getProject()
+            .getLayout()
+            .getBuildDirectory()
+            .dir("libs")
+            .get();
     }
 
     private Directory getDevArtifactsDirectory()
@@ -239,17 +331,17 @@ public abstract class ConfigurationsInitializer extends AbstractInitializer
             .get();
     }
 
-    private NamedDomainObjectProvider<Configuration> register(String name, Role role)
+    private Configuration register(String name, Role role)
     {
-        return getConfigs().register(name, role::apply);
+        return getConfigs().register(name, role::apply).get();
     }
 
-    private NamedDomainObjectProvider<Configuration> registerNonTransitive(String name, Role role)
+    private Configuration registerNonTransitive(String name, Role role)
     {
-        final NamedDomainObjectProvider<Configuration> provider = register(name, role);
-        provider.configure(configuration -> configuration.setTransitive(false));
+        final Configuration config = register(name, role);
+        config.setTransitive(false);
 
-        return provider;
+        return config;
     }
 
     private void extendsFrom(String forConfig, String extend)
